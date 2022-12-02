@@ -147,6 +147,7 @@
   <ItemGroup>
     <ClInclude Include="Emulator.h" />
     <ClInclude Include="EmulatorException.h" />
+    <ClInclude Include="InvalidArgument.h" />
     <ClInclude Include="Helper.h" />
     <ClInclude Include="InappropriateSize.h" />
     <ClInclude Include="Instruction.h" />

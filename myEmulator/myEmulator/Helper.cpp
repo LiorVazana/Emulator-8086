@@ -71,3 +71,12 @@ bool Helper::isMemoryAllowedRegister(const std::string& str)
 {
 	return str == "bx" || str == "si" || str == "di";
 }
+
+std::string Helper::getMemoryAccess(const std::string& str)
+{
+	if (!isMemory(str))
+		throw InvalidArgument("Argument must be memory accessable but recived '" + str + "'");
+
+	return str.substr(1, str.size() - 2);
+
+}

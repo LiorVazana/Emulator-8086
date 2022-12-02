@@ -8,11 +8,12 @@
 #include "MemoryAccessViolation.h"
 #include "InvalidRegisterAccess.h"
 #include "InappropriateSize.h"
+#include "InvalidArgument.h"
 
 // use this typedef in the memory vector;
 typedef unsigned char byte;
 typedef unsigned short word;
-
+typedef unsigned int dword;
 typedef void (*InstructionHandler) (const std::vector<std::string>&);
 
 enum OperandsOptions
@@ -29,6 +30,10 @@ private:
 
 	static word GetRegisterValue(const std::string& reg);
 	static void SetRegisterValue(const std::string& reg, const word value);
+	static byte GetValueFromMemoryAddr(const dword address);
+	static byte GetValueFromMemoryAccess(const std::string& memory);
+	static void SetValueInMemoryAddr(const dword address, const byte value);
+	static void SetValueInMemoryAccess(const std::string& memory, const byte value);
 
 	// opcode functions
 	static void movHandler(const std::vector<std::string>& operands);
@@ -42,6 +47,7 @@ private:
 	static void printHandler(const std::vector<std::string>& operands);
 
 private:
+	static const byte BITS_IN_BYTE = 8;
 	static const size_t MEMORY_SIZE = 1000;
 	static std::vector<byte> memoryVec;
 	static std::unordered_map<std::string, word> regs;

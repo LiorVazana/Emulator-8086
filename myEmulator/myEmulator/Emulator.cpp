@@ -21,7 +21,6 @@ void Emulator::ExecuteInstruction(const std::string& unprocessedInstruction)
 
 word Emulator::GetRegisterValue(const std::string& reg)
 {
-	const byte BITS_IN_BYTE = 8;
 	std::string regAccess = reg;
 
 	if (reg.size() == 2 && reg[1] == 'l' || reg[1] == 'h')
@@ -41,12 +40,12 @@ word Emulator::GetRegisterValue(const std::string& reg)
 			return regValue >> BITS_IN_BYTE; // 0x14fd => 0x0014
 	}
 
-	throw InvalidRegisterAccess(reg);
+	throw InvalidArgument(reg);
 }
 
 void Emulator::SetRegisterValue(const std::string& reg, const word value)
 {
-	const byte BITS_IN_BYTE = 8;
+	
 	std::string regAccess = reg;
 
 	if (reg.size() == 2 && (reg[1] == 'l' || reg[1] == 'h'))
@@ -81,7 +80,51 @@ void Emulator::SetRegisterValue(const std::string& reg, const word value)
 		}
 	}
 
-	throw InvalidRegisterAccess(reg);
+	throw InvalidArgument(reg);
+}
+
+byte Emulator::GetValueFromMemoryAddr(const dword address)
+{
+	if (address >= MEMORY_SIZE)
+		throw MemoryAccessViolation("Address not valid.");
+
+	return memoryVec[address];
+}
+
+byte Emulator::GetValueFromMemoryAccess(const std::string& memory)
+{
+	std::string memoryAccess = Helper::getMemoryAccess(memory);
+
+	dword address = 0;
+
+	if (Helper::isMemoryAllowedRegister(memoryAccess))
+		address = GetRegisterValue(memoryAccess);
+	else
+		address = std::stoi(memoryAccess);
+
+	return GetValueFromMemoryAddr(address);
+}
+
+void Emulator::SetValueInMemoryAddr(const dword address, const byte value)
+{
+	if (address >= MEMORY_SIZE)
+		throw MemoryAccessViolation("Address not valid.");
+
+	memoryVec[address] = value;
+}
+
+void Emulator::SetValueInMemoryAccess(const std::string& memory, const byte value)
+{
+	std::string memoryAccess = Helper::getMemoryAccess(memory);
+
+	dword address = 0;
+
+	if (Helper::isMemoryAllowedRegister(memoryAccess))
+		address = GetRegisterValue(memoryAccess);
+	else
+		address = std::stoi(memoryAccess);
+
+	SetValueInMemoryAddr(address, value);
 }
 
 void Emulator::movHandler(const std::vector<std::string>& operands)
@@ -89,7 +132,7 @@ void Emulator::movHandler(const std::vector<std::string>& operands)
 	Helper::validateNumOfOperands(2, operands.size());
 
 	if (Helper::isImmediate(operands[DST]))
-		throw InvalidOperand("First operand (" + operands[DST] + ") cannot be a immediate.");
+		throw InvalidOperand("First operand '" + operands[DST] + "' cannot be a immediate.");
 
 	if (Helper::isMemory(operands[DST]) && Helper::isMemory(operands[SRC]))
 		throw MemoryAccessViolation("can't access the memory twice at the same time.");
@@ -99,6 +142,68 @@ void Emulator::movHandler(const std::vector<std::string>& operands)
 
 	if (Helper::isRegister(operands[DST]) && Helper::isImmediate(operands[SRC]))
 		SetRegisterValue(operands[DST], std::stoi(operands[SRC]));
+
+	if (Helper::isRegister(operands[DST]) && Helper::isMemory(operands[SRC]))
+	{
+		std::string memoryAccess = Helper::getMemoryAccess(operands[SRC]);
+
+		dword address = 0;
+
+		if (Helper::isMemoryAllowedRegister(memoryAccess))
+			address = GetRegisterValue(memoryAccess);
+		else
+			address = std::stoi(memoryAccess);
+
+		if (operands[DST][1] == 'l' || operands[DST][1] == 'h')
+		{
+			SetRegisterValue(operands[DST], GetValueFromMemoryAddr(address));
+		}
+		else
+		{
+			word value = GetValueFromMemoryAddr(address);
+			value |= (static_cast<word>(GetValueFromMemoryAddr(address + 1)) << BITS_IN_BYTE);//שנייה
+
+			SetRegisterValue(operands[DST], value);
+		}
+	}
+	if (Helper::isMemory(operands[DST]) && Helper::isRegister(operands[SRC]))
+	{
+		std::string memoryAccess = Helper::getMemoryAccess(operands[DST]);
+
+		dword address = 0;
+
+		if (Helper::isMemoryAllowedRegister(memoryAccess))
+			address = GetRegisterValue(memoryAccess);
+		else
+			address = std::stoi(memoryAccess);
+
+		if (operands[SRC][1] == 'l' || operands[SRC][1] == 'h')
+		{
+			SetValueInMemoryAddr(address, GetRegisterValue(operands[SRC]));
+		}
+		else
+		{
+			word value = GetRegisterValue(operands[SRC]);
+			SetValueInMemoryAddr(address, value & 0x00ff);
+			SetValueInMemoryAddr(address + 1, value >> BITS_IN_BYTE);
+		}
+	}
+
+	if (Helper::isMemory(operands[DST]) && Helper::isImmediate(operands[SRC]))
+	{
+		std::string memoryAccess = Helper::getMemoryAccess(operands[DST]);
+
+		dword address = 0;
+
+		if (Helper::isMemoryAllowedRegister(memoryAccess))
+			address = GetRegisterValue(memoryAccess);
+		else
+			address = std::stoi(memoryAccess);
+
+		word value = std::stoi(operands[SRC]);
+		SetValueInMemoryAddr(address, value & 0x00ff);
+		SetValueInMemoryAddr(address + 1, value >> BITS_IN_BYTE);
+	}
 }
 
 void Emulator::leaHandler(const std::vector<std::string>& operands)
@@ -140,4 +245,13 @@ void Emulator::printHandler(const std::vector<std::string>& operands)
 {
 	if (Helper::isRegister(operands[0]))
 		std::cout << GetRegisterValue(operands[0]) << std::endl;
+
+	else if (Helper::isImmediate(operands[0]))
+		std::cout << operands[0] << std::endl;
+
+	else if (Helper::isMemory(operands[0]))
+		std::cout << static_cast<word>(GetValueFromMemoryAccess(operands[0])) << std::endl;
+
+	else
+		throw InvalidArgument("print must get an immediate number, memory address or register.");
 }
