@@ -151,7 +151,7 @@
     <ClInclude Include="Instruction.h" />
     <ClInclude Include="InvalidOpcode.h" />
     <ClInclude Include="InvalidOperand.h" />
-    <ClInclude Include="MemoryAccessVaiolation.h" />
+    <ClInclude Include="MemoryAccessViolation.h" />
     <ClInclude Include="Parser.h" />
     <ClInclude Include="WrongNumberOfOperands.h" />
   </ItemGroup>

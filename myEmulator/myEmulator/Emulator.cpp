@@ -24,13 +24,13 @@ void Emulator::movHandler(const std::vector<std::string>& operands)
 	Helper::validateNumOfOperands(2, operands.size());
 
 	if (Helper::isImmediate(operands[0]))
-		throw InvalidOperand("First operand (" + operands[0] + ") cannot be a number.");
+		throw InvalidOperand("First operand (" + operands[0] + ") cannot be a immidiant.");
 
 	if (Helper::isMemory(operands[0]) && Helper::isMemory(operands[1]))
-		throw MemoryAccessVaiolation("can't access the memory twice at the same time.");
+		throw MemoryAccessViolation("can't access the memory twice at the same time.");
 
 	if (Helper::isMemory(operands[0]) && !Helper::isMemoryAllowedRegister(operands[0].substr(1, operands[0].size()-1)))
-		throw MemoryAccessVaiolation("Accessing the memory requires using specific registers.");
+		throw MemoryAccessViolation("Accessing the memory requires using specific registers.");
 }
 
 void Emulator::leaHandler(const std::vector<std::string>& operands)

@@ -56,7 +56,7 @@
     <ClInclude Include="WrongNumberOfOperands.h">
       <Filter>Header Files\Exceptions</Filter>
     </ClInclude>
-    <ClInclude Include="MemoryAccessVaiolation.h">
+    <ClInclude Include="MemoryAccessViolation.h">
       <Filter>Header Files\Exceptions</Filter>
     </ClInclude>
   </ItemGroup>
