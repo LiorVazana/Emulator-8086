@@ -7,7 +7,7 @@ std::unordered_map<std::string, word> Emulator::regs = {{"ax", 0}, {"bx", 0}, {"
 std::unordered_map<std::string, InstructionHandler> Emulator::instructions = { {"mov", movHandler},
 										{"lea", leaHandler}, {"add", addHandler}, {"sub", subHandler},
 										{"mul", mulHandler}, {"div", divHandler}, {"inc", incHandler},
-										{"dec", decHandler}, {"print", printHandler}};
+										{"dec", decHandler}, {"print", printHandler}, {"print_str", printStrHandler}};
 
 void Emulator::ExecuteInstruction(const std::string& unprocessedInstruction)
 {
@@ -105,7 +105,7 @@ byte Emulator::GetValueFromMemoryAccess(const std::string& memory)
 	return GetValueFromMemoryAddr(address);
 }
 
-void Emulator::SetValueInMemoryAddr(const dword address, const byte value)
+void Emulator::SetValueInMemoryAddr(const dword address, const byte value) // [ax + 5]
 {
 	if (address >= MEMORY_SIZE)
 		throw MemoryAccessViolation("Address not valid.");
@@ -206,9 +206,27 @@ void Emulator::movHandler(const std::vector<std::string>& operands)
 	}
 }
 
-void Emulator::leaHandler(const std::vector<std::string>& operands)
+void Emulator::leaHandler(const std::vector<std::string>& operands)// mov ax, [bx]
 {
 	Helper::validateNumOfOperands(2, operands.size());
+
+	if (!Helper::isRegister(operands[DST]))
+		throw InvalidOperand("first arg must be register");
+
+	if (!Helper::isMemory(operands[SRC]))
+		throw InvalidOperand("second arg must be memory");
+		
+	std::string memoryAccess = Helper::getMemoryAccess(operands[SRC]);
+
+	dword address = 0;
+
+	if (Helper::isMemoryAllowedRegister(memoryAccess))
+		address = GetRegisterValue(memoryAccess);
+	else
+		address = std::stoi(memoryAccess);
+
+	SetRegisterValue(operands[DST], address);
+
 }
 
 void Emulator::addHandler(const std::vector<std::string>& operands)
@@ -254,4 +272,27 @@ void Emulator::printHandler(const std::vector<std::string>& operands)
 
 	else
 		throw InvalidArgument("print must get an immediate number, memory address or register.");
+}
+
+void Emulator::printStrHandler(const std::vector<std::string>& operands)
+{
+	dword address;
+	byte chr = ' ';
+
+	if (Helper::isRegister(operands[0]))
+		address = GetRegisterValue(operands[0]);
+
+	else if (Helper::isImmediate(operands[0]))
+		address = std::stoi(operands[0]);
+
+	else
+		throw InvalidArgument("print_str expect immediate number or register");
+
+	while ((chr = GetValueFromMemoryAddr(address)) != '\0')
+	{
+		std::cout << chr;
+		++address;
+	}
+
+	std::cout << std::endl;
 }

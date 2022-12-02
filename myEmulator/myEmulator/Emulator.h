@@ -45,6 +45,7 @@ private:
 	static void incHandler(const std::vector<std::string>& operands);
 	static void decHandler(const std::vector<std::string>& operands);
 	static void printHandler(const std::vector<std::string>& operands);
+	static void printStrHandler(const std::vector<std::string>& operands);
 
 private:
 	static const byte BITS_IN_BYTE = 8;
