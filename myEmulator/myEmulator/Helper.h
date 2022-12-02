@@ -2,6 +2,7 @@
 #include <string>
 #include <array>
 #include "WrongNumberOfOperands.h"
+#include "MemoryAccessViolation.h"
 
 class Helper
 {

@@ -148,9 +148,11 @@
     <ClInclude Include="Emulator.h" />
     <ClInclude Include="EmulatorException.h" />
     <ClInclude Include="Helper.h" />
+    <ClInclude Include="InappropriateSize.h" />
     <ClInclude Include="Instruction.h" />
     <ClInclude Include="InvalidOpcode.h" />
     <ClInclude Include="InvalidOperand.h" />
+    <ClInclude Include="InvalidRegisterAccess.h" />
     <ClInclude Include="MemoryAccessViolation.h" />
     <ClInclude Include="Parser.h" />
     <ClInclude Include="WrongNumberOfOperands.h" />

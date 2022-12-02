@@ -27,7 +27,12 @@ void Helper::validateNumOfOperands(const size_t expected, const size_t given)
 
 bool Helper::isRegister(const std::string& str)
 {
-	return std::find(std::begin(regs), std::end(regs), str) != std::end(regs);
+	std::string regAccess = str;
+
+	if (str.size() == 2 && (str[1] == 'l' || str[1] == 'h'))
+		regAccess[1] = 'x';
+
+	return std::find(std::begin(regs), std::end(regs), regAccess) != std::end(regs);
 }
 
 bool Helper::isImmediate(const std::string& str)
@@ -37,7 +42,7 @@ bool Helper::isImmediate(const std::string& str)
 		(void)std::stoi(str);
 		return true;
 	}
-	catch(const std::exception& ex)
+	catch(const std::exception&)
 	{
 		return false;
 	}
@@ -50,11 +55,13 @@ bool Helper::isMemory(const std::string& str)
 
 	if (str[0] == '[' && str[str.size() - 1] == ']')
 	{
-		std::string trimedStr = str.substr(1, str.size() - 1);
+		std::string trimedStr = str.substr(1, str.size() - 2);
 		trim(trimedStr);
 
 		if (isMemoryAllowedRegister(trimedStr) || isImmediate(trimedStr))
 			return true;
+		else
+			throw MemoryAccessViolation("You can't access the memory with '" + trimedStr + "'.");
 	}
 
 	return false;
