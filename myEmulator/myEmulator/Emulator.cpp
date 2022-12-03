@@ -9,14 +9,27 @@ std::unordered_map<std::string, InstructionHandler> Emulator::instructions = { {
 										{"mul", mulHandler}, {"div", divHandler}, {"inc", incHandler},
 										{"dec", decHandler}, {"print", printHandler}, {"print_str", printStrHandler}};
 
-void Emulator::ExecuteInstruction(const std::string& unprocessedInstruction)
-{
-	Instruction processedInstruction = Parser::ProcessInstruction(unprocessedInstruction);
+std::vector<std::string> Emulator::instructionVec;
+std::unordered_map<std::string, size_t> Emulator::symbols;
 
-	if (instructions.count(processedInstruction.opcode) != 0)
-		instructions[processedInstruction.opcode](processedInstruction.operands);
+void Emulator::ExecuteInstruction(const std::string& instructionStr)
+{
+	Instruction instruction = Parser::ProcessInstruction(instructionStr);
+
+	if (instructions.count(instruction.opcode) != 0)
+	{
+		instructions[instruction.opcode](instruction.operands);
+		instructionVec.push_back(instructionStr);
+	}
+	else if (Helper::isLabel(instruction.opcode))
+	{
+		std::string label = instruction.opcode.substr(0, instruction.opcode.size() - 1);
+		symbols[label] = instructionVec.size();
+	}
 	else
-		throw InvalidOpcode(processedInstruction.opcode);
+	{
+		throw InvalidOpcode(instruction.opcode);
+	}
 }
 
 word Emulator::GetRegisterValue(const std::string& reg)

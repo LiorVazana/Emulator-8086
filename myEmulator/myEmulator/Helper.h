@@ -1,9 +1,11 @@
 #pragma once
 #include <string>
 #include <array>
+#include <regex>
 #include "WrongNumberOfOperands.h"
 #include "MemoryAccessViolation.h"
 #include "InvalidArgument.h"
+#include "Instruction.h"
 
 class Helper
 {
@@ -17,6 +19,7 @@ public:
 	static bool isMemory(const std::string& str); 
 	static bool isMemoryAllowedRegister(const std::string& str);
 	static std::string getMemoryAccess(const std::string& str);
+	static bool isLabel(const std::string& str);
 
 private:
 	static const size_t NUM_OF_REGS = 12;

@@ -80,3 +80,10 @@ std::string Helper::getMemoryAccess(const std::string& str)
 	return str.substr(1, str.size() - 2);
 
 }
+
+bool Helper::isLabel(const std::string& str)
+{
+	// strat with english letter or '_', end with ':' and in the middle 0 or more english letters, '_' numbers 
+	std::regex pattern("[a-zA-Z_][a-zA-Z_0-9]*:"); 
+	return std::regex_match(str, pattern);
+}

@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include <unordered_map>
+#include <memory>
 #include "Instruction.h"
 #include "Parser.h"
 #include "InvalidOpcode.h"
@@ -53,4 +54,6 @@ private:
 	static std::vector<byte> memoryVec;
 	static std::unordered_map<std::string, word> regs;
 	static std::unordered_map<std::string, InstructionHandler> instructions;
+	static std::vector<std::string> instructionVec;
+	static std::unordered_map<std::string, size_t> symbols; 
 };
