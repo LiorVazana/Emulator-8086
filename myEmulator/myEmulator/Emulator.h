@@ -10,6 +10,7 @@
 #include "InvalidRegisterAccess.h"
 #include "InappropriateSize.h"
 #include "InvalidArgument.h"
+#include "ZeroDivision.h"
 
 // use this typedef in the memory vector;
 typedef unsigned char byte;
@@ -41,6 +42,7 @@ private:
 	static byte GetValueFromMemoryAccess(const std::string& memory);
 	static void SetValueInMemoryAddr(const dword address, const byte value);
 	static void SetValueInMemoryAccess(const std::string& memory, const byte value);
+	static word GetValueFromImmediate(const std::string& str);
 	static void MathController(const std::vector<std::string>& operands, const MathOperation op);
 
 	// opcode functions

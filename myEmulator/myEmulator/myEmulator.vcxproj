@@ -157,6 +157,7 @@
     <ClInclude Include="MemoryAccessViolation.h" />
     <ClInclude Include="Parser.h" />
     <ClInclude Include="WrongNumberOfOperands.h" />
+    <ClInclude Include="ZeroDivision.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

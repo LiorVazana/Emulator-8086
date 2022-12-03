@@ -140,6 +140,24 @@ void Emulator::SetValueInMemoryAccess(const std::string& memory, const byte valu
 	SetValueInMemoryAddr(address, value);
 }
 
+word Emulator::GetValueFromImmediate(const std::string& str)
+{
+	try
+	{
+		return std::stoi(str);
+	}
+	catch (const std::exception&)
+	{
+		// accept only ascii values surrounded by single quotes
+		std::regex pattern("'[ -~]'");
+
+		if (std::regex_match(str, pattern))
+			return str[1];
+	}
+
+	throw InvalidArgument("the given argument isn't immediate");
+}
+
 void Emulator::MathController(const std::vector<std::string>& operands, const MathOperation op)
 {
 	Helper::validateNumOfOperands(2, operands.size());
@@ -171,6 +189,7 @@ void Emulator::MathController(const std::vector<std::string>& operands, const Ma
 				break;
 
 			case MathOperation::DIV:
+				SetRegisterValue("dx", GetRegisterValue(operands[DST]) % GetRegisterValue(operands[SRC]));
 				SetRegisterValue(operands[DST], GetRegisterValue(operands[DST]) / GetRegisterValue(operands[SRC]));
 				break;
 		}
@@ -179,27 +198,27 @@ void Emulator::MathController(const std::vector<std::string>& operands, const Ma
 
 	if (Helper::isRegister(operands[DST]) && Helper::isImmediate(operands[SRC]))
 	{
-		SetRegisterValue(operands[DST], GetRegisterValue(operands[DST]) - std::stoi(operands[SRC]));
 		switch (op)
 		{
 			case MathOperation::MOV:
-				SetRegisterValue(operands[DST], std::stoi(operands[SRC]));
+				SetRegisterValue(operands[DST], GetValueFromImmediate(operands[SRC]));
 				break;
 
 			case MathOperation::ADD:
-				SetRegisterValue(operands[DST], GetRegisterValue(operands[DST]) + std::stoi(operands[SRC]));
+				SetRegisterValue(operands[DST], GetRegisterValue(operands[DST]) + GetValueFromImmediate(operands[SRC]));
 				break;
 
 			case MathOperation::SUB:
-				SetRegisterValue(operands[DST], GetRegisterValue(operands[DST]) - std::stoi(operands[SRC]));
+				SetRegisterValue(operands[DST], GetRegisterValue(operands[DST]) - GetValueFromImmediate(operands[SRC]));
 				break;
 
 			case MathOperation::MUL:
-				SetRegisterValue(operands[DST], GetRegisterValue(operands[DST]) * std::stoi(operands[SRC]));
+				SetRegisterValue(operands[DST], GetRegisterValue(operands[DST]) * GetValueFromImmediate(operands[SRC]));
 				break;
 
 			case MathOperation::DIV:
-				SetRegisterValue(operands[DST], GetRegisterValue(operands[DST]) / std::stoi(operands[SRC]));
+				SetRegisterValue("dx", GetRegisterValue(operands[DST]) % GetValueFromImmediate(operands[SRC]));
+				SetRegisterValue(operands[DST], GetRegisterValue(operands[DST]) / GetValueFromImmediate(operands[SRC]));
 				break;
 		}
 	}
@@ -236,6 +255,7 @@ void Emulator::MathController(const std::vector<std::string>& operands, const Ma
 					break;
 
 				case MathOperation::DIV:
+					SetRegisterValue("dx", GetRegisterValue(operands[DST]) % GetValueFromMemoryAddr(address));
 					SetRegisterValue(operands[DST], GetRegisterValue(operands[DST]) / GetValueFromMemoryAddr(address));
 					break;
 			}
@@ -264,6 +284,7 @@ void Emulator::MathController(const std::vector<std::string>& operands, const Ma
 					break;
 
 				case MathOperation::DIV:
+					SetRegisterValue("dx", GetRegisterValue(operands[DST]) % value);
 					SetRegisterValue(operands[DST], GetRegisterValue(operands[DST]) / value);
 					break;
 			}
@@ -301,6 +322,7 @@ void Emulator::MathController(const std::vector<std::string>& operands, const Ma
 					break;
 
 				case MathOperation::DIV:
+					SetRegisterValue("dx", GetRegisterValue(operands[DST]) % GetRegisterValue(operands[SRC]));
 					SetValueInMemoryAddr(address, GetRegisterValue(operands[DST]) / GetRegisterValue(operands[SRC]));
 					break;
 			}
@@ -327,6 +349,7 @@ void Emulator::MathController(const std::vector<std::string>& operands, const Ma
 					break;
 
 				case MathOperation::DIV:
+					SetRegisterValue("dx", GetRegisterValue(operands[DST]) % GetRegisterValue(operands[SRC]));
 					value = GetRegisterValue(operands[DST]) / GetRegisterValue(operands[SRC]);
 					break;
 			}
@@ -351,23 +374,24 @@ void Emulator::MathController(const std::vector<std::string>& operands, const Ma
 		switch (op)
 		{
 		case MathOperation::MOV:
-			value = std::stoi(operands[SRC]);
+			value = GetValueFromImmediate(operands[SRC]);
 			break;
 
 		case MathOperation::ADD:
-			value = GetRegisterValue(operands[DST]) + std::stoi(operands[SRC]);
+			value = GetRegisterValue(operands[DST]) + GetValueFromImmediate(operands[SRC]);
 			break;
 
 		case MathOperation::SUB:
-			value = GetRegisterValue(operands[DST]) - std::stoi(operands[SRC]);
+			value = GetRegisterValue(operands[DST]) - GetValueFromImmediate(operands[SRC]);
 			break;
 
 		case MathOperation::MUL:
-			value = GetRegisterValue(operands[DST]) * std::stoi(operands[SRC]);
+			value = GetRegisterValue(operands[DST]) * GetValueFromImmediate(operands[SRC]);
 			break;
 
 		case MathOperation::DIV:
-			value = GetRegisterValue(operands[DST]) / std::stoi(operands[SRC]);
+			SetRegisterValue("dx", GetRegisterValue(operands[DST]) % GetValueFromImmediate(operands[SRC]));
+			value = GetRegisterValue(operands[DST]) / GetValueFromImmediate(operands[SRC]);
 			break;
 		}
 
@@ -381,7 +405,7 @@ void Emulator::movHandler(const std::vector<std::string>& operands)
 	MathController(operands, MathOperation::MOV);
 }
 
-void Emulator::leaHandler(const std::vector<std::string>& operands)// mov ax, [bx]
+void Emulator::leaHandler(const std::vector<std::string>& operands)
 {
 	Helper::validateNumOfOperands(2, operands.size());
 
@@ -398,7 +422,7 @@ void Emulator::leaHandler(const std::vector<std::string>& operands)// mov ax, [b
 	if (Helper::isMemoryAllowedRegister(memoryAccess))
 		address = GetRegisterValue(memoryAccess);
 	else
-		address = std::stoi(memoryAccess);
+		address = GetValueFromImmediate(memoryAccess);
 
 	SetRegisterValue(operands[DST], address);
 
@@ -430,6 +454,10 @@ void Emulator::divHandler(const std::vector<std::string>& operands)
 
 	std::vector<std::string> newOperands = operands;
 	newOperands.insert(newOperands.begin(), 1, "ax");
+
+	if ((Helper::isImmediate(operands[0]) && GetValueFromImmediate(operands[0]) == 0) || (Helper::isRegister(operands[0]) && GetRegisterValue(operands[0]) == 0) ||
+		(Helper::isMemory(operands[0]) && GetValueFromMemoryAccess(operands[0]) == 0))
+		throw ZeroDivision();
 
 	MathController(newOperands, MathOperation::DIV);
 }

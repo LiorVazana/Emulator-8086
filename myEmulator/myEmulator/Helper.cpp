@@ -44,7 +44,9 @@ bool Helper::isImmediate(const std::string& str)
 	}
 	catch(const std::exception&)
 	{
-		return false;
+		// accept only ascii values surrounded by single quotes
+		std::regex pattern("'[ -~]'"); 
+		return std::regex_match(str, pattern);
 	}
 }
 
