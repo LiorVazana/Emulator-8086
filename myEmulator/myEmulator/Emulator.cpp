@@ -140,7 +140,7 @@ void Emulator::SetValueInMemoryAccess(const std::string& memory, const byte valu
 	SetValueInMemoryAddr(address, value);
 }
 
-void Emulator::movHandler(const std::vector<std::string>& operands)
+void Emulator::MathController(const std::vector<std::string>& operands, const MathOperation op)
 {
 	Helper::validateNumOfOperands(2, operands.size());
 
@@ -151,10 +151,58 @@ void Emulator::movHandler(const std::vector<std::string>& operands)
 		throw MemoryAccessViolation("can't access the memory twice at the same time.");
 
 	if (Helper::isRegister(operands[DST]) && Helper::isRegister(operands[SRC]))
-		SetRegisterValue(operands[DST], GetRegisterValue(operands[SRC]));
+	{
+		switch (op)
+		{
+			case MathOperation::MOV:
+				SetRegisterValue(operands[DST], GetRegisterValue(operands[SRC]));
+				break;
+
+			case MathOperation::ADD:
+				SetRegisterValue(operands[DST], GetRegisterValue(operands[DST]) + GetRegisterValue(operands[SRC]));
+				break;
+
+			case MathOperation::SUB:
+				SetRegisterValue(operands[DST], GetRegisterValue(operands[DST]) - GetRegisterValue(operands[SRC]));
+				break;
+
+			case MathOperation::MUL:
+				SetRegisterValue(operands[DST], GetRegisterValue(operands[DST]) * GetRegisterValue(operands[SRC]));
+				break;
+
+			case MathOperation::DIV:
+				SetRegisterValue(operands[DST], GetRegisterValue(operands[DST]) / GetRegisterValue(operands[SRC]));
+				break;
+		}
+
+	}
 
 	if (Helper::isRegister(operands[DST]) && Helper::isImmediate(operands[SRC]))
-		SetRegisterValue(operands[DST], std::stoi(operands[SRC]));
+	{
+		SetRegisterValue(operands[DST], GetRegisterValue(operands[DST]) - std::stoi(operands[SRC]));
+		switch (op)
+		{
+			case MathOperation::MOV:
+				SetRegisterValue(operands[DST], std::stoi(operands[SRC]));
+				break;
+
+			case MathOperation::ADD:
+				SetRegisterValue(operands[DST], GetRegisterValue(operands[DST]) + std::stoi(operands[SRC]));
+				break;
+
+			case MathOperation::SUB:
+				SetRegisterValue(operands[DST], GetRegisterValue(operands[DST]) - std::stoi(operands[SRC]));
+				break;
+
+			case MathOperation::MUL:
+				SetRegisterValue(operands[DST], GetRegisterValue(operands[DST]) * std::stoi(operands[SRC]));
+				break;
+
+			case MathOperation::DIV:
+				SetRegisterValue(operands[DST], GetRegisterValue(operands[DST]) / std::stoi(operands[SRC]));
+				break;
+		}
+	}
 
 	if (Helper::isRegister(operands[DST]) && Helper::isMemory(operands[SRC]))
 	{
@@ -169,14 +217,56 @@ void Emulator::movHandler(const std::vector<std::string>& operands)
 
 		if (operands[DST][1] == 'l' || operands[DST][1] == 'h')
 		{
-			SetRegisterValue(operands[DST], GetValueFromMemoryAddr(address));
+			switch (op)
+			{
+				case MathOperation::MOV:
+					SetRegisterValue(operands[DST], GetValueFromMemoryAddr(address));
+					break;
+
+				case MathOperation::ADD:
+					SetRegisterValue(operands[DST], GetRegisterValue(operands[DST]) + GetValueFromMemoryAddr(address));
+					break;
+
+				case MathOperation::SUB:
+					SetRegisterValue(operands[DST], GetRegisterValue(operands[DST]) - GetValueFromMemoryAddr(address));
+					break;
+
+				case MathOperation::MUL:
+					SetRegisterValue(operands[DST], GetRegisterValue(operands[DST]) * GetValueFromMemoryAddr(address));
+					break;
+
+				case MathOperation::DIV:
+					SetRegisterValue(operands[DST], GetRegisterValue(operands[DST]) / GetValueFromMemoryAddr(address));
+					break;
+			}
 		}
 		else
 		{
 			word value = GetValueFromMemoryAddr(address);
 			value |= (static_cast<word>(GetValueFromMemoryAddr(address + 1)) << BITS_IN_BYTE);//שנייה
 
-			SetRegisterValue(operands[DST], value);
+			switch (op)
+			{
+				case MathOperation::MOV:
+					SetRegisterValue(operands[DST], value);
+					break;
+
+				case MathOperation::ADD:
+					SetRegisterValue(operands[DST], GetRegisterValue(operands[DST]) + value);
+					break;
+
+				case MathOperation::SUB:
+					SetRegisterValue(operands[DST], GetRegisterValue(operands[DST]) - value);
+					break;
+
+				case MathOperation::MUL:
+					SetRegisterValue(operands[DST], GetRegisterValue(operands[DST]) * value);
+					break;
+
+				case MathOperation::DIV:
+					SetRegisterValue(operands[DST], GetRegisterValue(operands[DST]) / value);
+					break;
+			}
 		}
 	}
 	if (Helper::isMemory(operands[DST]) && Helper::isRegister(operands[SRC]))
@@ -192,12 +282,56 @@ void Emulator::movHandler(const std::vector<std::string>& operands)
 
 		if (operands[SRC][1] == 'l' || operands[SRC][1] == 'h')
 		{
-			SetValueInMemoryAddr(address, GetRegisterValue(operands[SRC]));
+			switch (op)
+			{
+				case MathOperation::MOV:
+					SetValueInMemoryAddr(address, GetRegisterValue(operands[SRC]));
+					break;
+
+				case MathOperation::ADD:
+					SetValueInMemoryAddr(address, GetRegisterValue(operands[DST]) + GetRegisterValue(operands[SRC]));
+					break;
+
+				case MathOperation::SUB:
+					SetValueInMemoryAddr(address, GetRegisterValue(operands[DST]) - GetRegisterValue(operands[SRC]));
+					break;
+
+				case MathOperation::MUL:
+					SetValueInMemoryAddr(address, GetRegisterValue(operands[DST]) * GetRegisterValue(operands[SRC]));
+					break;
+
+				case MathOperation::DIV:
+					SetValueInMemoryAddr(address, GetRegisterValue(operands[DST]) / GetRegisterValue(operands[SRC]));
+					break;
+			}
 		}
 		else
 		{
-			word value = GetRegisterValue(operands[SRC]);
-			SetValueInMemoryAddr(address, value & 0x00ff);
+			word value = 0;
+			switch (op)
+			{
+				case MathOperation::MOV:
+					value = GetRegisterValue(operands[SRC]);
+					break;
+
+				case MathOperation::ADD:
+					value = GetRegisterValue(operands[DST]) + GetRegisterValue(operands[SRC]);
+					break;
+
+				case MathOperation::SUB:
+					value = GetRegisterValue(operands[DST]) - GetRegisterValue(operands[SRC]);
+					break;
+
+				case MathOperation::MUL:
+					value = GetRegisterValue(operands[DST]) * GetRegisterValue(operands[SRC]);
+					break;
+
+				case MathOperation::DIV:
+					value = GetRegisterValue(operands[DST]) / GetRegisterValue(operands[SRC]);
+					break;
+			}
+
+			SetValueInMemoryAddr(address, (value & 0x00ff));
 			SetValueInMemoryAddr(address + 1, value >> BITS_IN_BYTE);
 		}
 	}
@@ -213,10 +347,38 @@ void Emulator::movHandler(const std::vector<std::string>& operands)
 		else
 			address = std::stoi(memoryAccess);
 
-		word value = std::stoi(operands[SRC]);
+		word value = 0;
+		switch (op)
+		{
+		case MathOperation::MOV:
+			value = std::stoi(operands[SRC]);
+			break;
+
+		case MathOperation::ADD:
+			value = GetRegisterValue(operands[DST]) + std::stoi(operands[SRC]);
+			break;
+
+		case MathOperation::SUB:
+			value = GetRegisterValue(operands[DST]) - std::stoi(operands[SRC]);
+			break;
+
+		case MathOperation::MUL:
+			value = GetRegisterValue(operands[DST]) * std::stoi(operands[SRC]);
+			break;
+
+		case MathOperation::DIV:
+			value = GetRegisterValue(operands[DST]) / std::stoi(operands[SRC]);
+			break;
+		}
+
 		SetValueInMemoryAddr(address, value & 0x00ff);
 		SetValueInMemoryAddr(address + 1, value >> BITS_IN_BYTE);
 	}
+}
+
+void Emulator::movHandler(const std::vector<std::string>& operands)
+{
+	MathController(operands, MathOperation::MOV);
 }
 
 void Emulator::leaHandler(const std::vector<std::string>& operands)// mov ax, [bx]
@@ -244,36 +406,59 @@ void Emulator::leaHandler(const std::vector<std::string>& operands)// mov ax, [b
 
 void Emulator::addHandler(const std::vector<std::string>& operands)
 {
-	Helper::validateNumOfOperands(2, operands.size());
+	MathController(operands, MathOperation::ADD);
 }
 
 void Emulator::subHandler(const std::vector<std::string>& operands)
 {
-	Helper::validateNumOfOperands(2, operands.size());
+	MathController(operands, MathOperation::SUB);
 }
 
 void Emulator::mulHandler(const std::vector<std::string>& operands)
 {
 	Helper::validateNumOfOperands(1, operands.size());
+
+	std::vector<std::string> newOperands = operands;
+	newOperands.insert(newOperands.begin(), 1, "ax");
+
+	MathController(newOperands, MathOperation::MUL);
 }
 
 void Emulator::divHandler(const std::vector<std::string>& operands)
 {
 	Helper::validateNumOfOperands(1, operands.size());
+
+	std::vector<std::string> newOperands = operands;
+	newOperands.insert(newOperands.begin(), 1, "ax");
+
+	MathController(newOperands, MathOperation::DIV);
 }
 
 void Emulator::incHandler(const std::vector<std::string>& operands)
 {
 	Helper::validateNumOfOperands(1, operands.size());
+
+	std::vector<std::string> newOperands = operands;
+	newOperands.push_back("1");
+
+	MathController(newOperands, MathOperation::ADD);
+
 }
 
 void Emulator::decHandler(const std::vector<std::string>& operands)
 {
 	Helper::validateNumOfOperands(1, operands.size());
+
+	std::vector<std::string> newOperands = operands;
+	newOperands.push_back("1");
+
+	MathController(newOperands, MathOperation::SUB);
 }
 
 void Emulator::printHandler(const std::vector<std::string>& operands)
 {
+	Helper::validateNumOfOperands(1, operands.size());
+
 	if (Helper::isRegister(operands[0]))
 		std::cout << GetRegisterValue(operands[0]) << std::endl;
 
@@ -289,6 +474,8 @@ void Emulator::printHandler(const std::vector<std::string>& operands)
 
 void Emulator::printStrHandler(const std::vector<std::string>& operands)
 {
+	Helper::validateNumOfOperands(1, operands.size());
+
 	dword address;
 	byte chr = ' ';
 
