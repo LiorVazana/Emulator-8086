@@ -7,10 +7,14 @@ std::unordered_map<std::string, word> Emulator::regs = {{"ax", 0}, {"bx", 0}, {"
 std::unordered_map<std::string, InstructionHandler> Emulator::instructions = { {"mov", movHandler},
 										{"lea", leaHandler}, {"add", addHandler}, {"sub", subHandler},
 										{"mul", mulHandler}, {"div", divHandler}, {"inc", incHandler},
-										{"dec", decHandler}, {"print", printHandler}, {"print_str", printStrHandler}};
+										{"dec", decHandler}, {"print", printHandler}, {"print_str", printStrHandler},
+										{"jmp", jmpHandler}, {"pause", pauseHandler}, {"resume", resumeHandler}};
 
 std::vector<std::string> Emulator::instructionVec;
 std::unordered_map<std::string, size_t> Emulator::symbols;
+bool Emulator::isPaused = false;
+size_t Emulator::pausedLine = 0;
+bool Emulator::keepTrack = true;
 
 void Emulator::ExecuteInstruction(const std::string& instructionStr)
 {
@@ -18,13 +22,18 @@ void Emulator::ExecuteInstruction(const std::string& instructionStr)
 
 	if (instructions.count(instruction.opcode) != 0)
 	{
-		instructions[instruction.opcode](instruction.operands);
-		instructionVec.push_back(instructionStr);
+		if(!isPaused || instruction.opcode == "resume")
+			instructions[instruction.opcode](instruction.operands);
+
+		if(keepTrack)
+			instructionVec.push_back(instructionStr);
 	}
 	else if (Helper::isLabel(instruction.opcode))
 	{
-		std::string label = instruction.opcode.substr(0, instruction.opcode.size() - 1);
-		symbols[label] = instructionVec.size();
+		if (symbols.count(instruction.opcode) != 0)
+			throw InvalidArgument("label is already exist.");
+
+		symbols[instruction.opcode] = instructionVec.size();
 	}
 	else
 	{
@@ -193,10 +202,8 @@ void Emulator::MathController(const std::vector<std::string>& operands, const Ma
 				SetRegisterValue(operands[DST], GetRegisterValue(operands[DST]) / GetRegisterValue(operands[SRC]));
 				break;
 		}
-
 	}
-
-	if (Helper::isRegister(operands[DST]) && Helper::isImmediate(operands[SRC]))
+	else if (Helper::isRegister(operands[DST]) && Helper::isImmediate(operands[SRC]))
 	{
 		switch (op)
 		{
@@ -221,9 +228,9 @@ void Emulator::MathController(const std::vector<std::string>& operands, const Ma
 				SetRegisterValue(operands[DST], GetRegisterValue(operands[DST]) / GetValueFromImmediate(operands[SRC]));
 				break;
 		}
+		return;
 	}
-
-	if (Helper::isRegister(operands[DST]) && Helper::isMemory(operands[SRC]))
+	else if (Helper::isRegister(operands[DST]) && Helper::isMemory(operands[SRC]))
 	{
 		std::string memoryAccess = Helper::getMemoryAccess(operands[SRC]);
 
@@ -289,8 +296,9 @@ void Emulator::MathController(const std::vector<std::string>& operands, const Ma
 					break;
 			}
 		}
+
 	}
-	if (Helper::isMemory(operands[DST]) && Helper::isRegister(operands[SRC]))
+	else if (Helper::isMemory(operands[DST]) && Helper::isRegister(operands[SRC]))
 	{
 		std::string memoryAccess = Helper::getMemoryAccess(operands[DST]);
 
@@ -358,8 +366,7 @@ void Emulator::MathController(const std::vector<std::string>& operands, const Ma
 			SetValueInMemoryAddr(address + 1, value >> BITS_IN_BYTE);
 		}
 	}
-
-	if (Helper::isMemory(operands[DST]) && Helper::isImmediate(operands[SRC]))
+	else if (Helper::isMemory(operands[DST]) && Helper::isImmediate(operands[SRC]))
 	{
 		std::string memoryAccess = Helper::getMemoryAccess(operands[DST]);
 
@@ -397,6 +404,10 @@ void Emulator::MathController(const std::vector<std::string>& operands, const Ma
 
 		SetValueInMemoryAddr(address, value & 0x00ff);
 		SetValueInMemoryAddr(address + 1, value >> BITS_IN_BYTE);
+	}
+	else 
+	{
+		throw InvalidOperand("unsupported operand");
 	}
 }
 
@@ -523,4 +534,54 @@ void Emulator::printStrHandler(const std::vector<std::string>& operands)
 	}
 
 	std::cout << std::endl;
+}
+
+void Emulator::jmpHandler(const std::vector<std::string>& operands)
+{
+	Helper::validateNumOfOperands(1, operands.size());
+	
+	std::string label = operands[0] + ":";
+
+	if (symbols.count(label) == 0)
+		throw InvalidArgument(operands[0] + " doesnt exist");
+
+	if(keepTrack)
+		instructionVec.push_back("jmp " + operands[0]);
+
+	bool oldKeepTrack = keepTrack;
+
+	keepTrack = false;
+
+	for (auto it = instructionVec.begin() + symbols[label]; it != instructionVec.end(); ++it)
+	{
+		ExecuteInstruction(*it);
+	}
+
+	keepTrack = oldKeepTrack;
+
+}
+
+void Emulator::pauseHandler(const std::vector<std::string>& operands)
+{ 
+	if (isPaused)
+		return;
+
+	isPaused = true;
+	pausedLine = instructionVec.size() + 1;
+}
+
+void Emulator::resumeHandler(const std::vector<std::string>& operands)
+{
+	if (!isPaused)
+		return;
+
+	isPaused = false;
+	keepTrack = false;
+
+	for (auto it = instructionVec.begin() + pausedLine; it != instructionVec.end(); ++it)
+	{
+		ExecuteInstruction(*it);
+	}
+
+	keepTrack = true;
 }

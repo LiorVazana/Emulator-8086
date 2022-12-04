@@ -32,7 +32,7 @@ enum class MathOperation
 class Emulator
 {
 public:
-	static void ExecuteInstruction(const std::string& unprocessedInstruction);
+	static void ExecuteInstruction(const std::string& instructionStr);
 
 private:
 
@@ -56,6 +56,9 @@ private:
 	static void decHandler(const std::vector<std::string>& operands);
 	static void printHandler(const std::vector<std::string>& operands);
 	static void printStrHandler(const std::vector<std::string>& operands);
+	static void jmpHandler(const std::vector<std::string>& operands);
+	static void pauseHandler(const std::vector<std::string>& operands);
+	static void resumeHandler(const std::vector<std::string>& operands);
 
 private:
 	static const byte BITS_IN_BYTE = 8;
@@ -64,5 +67,8 @@ private:
 	static std::unordered_map<std::string, word> regs;
 	static std::unordered_map<std::string, InstructionHandler> instructions;
 	static std::vector<std::string> instructionVec;
-	static std::unordered_map<std::string, size_t> symbols; 
+	static std::unordered_map<std::string, size_t> symbols;
+	static bool isPaused;
+	static size_t pausedLine;
+	static bool keepTrack;
 };
