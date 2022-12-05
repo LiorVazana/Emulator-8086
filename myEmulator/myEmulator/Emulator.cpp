@@ -8,26 +8,21 @@ std::unordered_map<std::string, InstructionHandler> Emulator::instructions = { {
 										{"lea", leaHandler}, {"add", addHandler}, {"sub", subHandler},
 										{"mul", mulHandler}, {"div", divHandler}, {"inc", incHandler},
 										{"dec", decHandler}, {"print", printHandler}, {"print_str", printStrHandler},
-										{"jmp", jmpHandler}, {"pause", pauseHandler}, {"resume", resumeHandler},
-										{"loop", loopHandler}};
+										{"jmp", jmpHandler}, {"loop", loopHandler}};
 
 std::vector<std::string> Emulator::instructionVec;
 std::unordered_map<std::string, size_t> Emulator::symbols;
-bool Emulator::isPaused = false;
-size_t Emulator::pausedLine = 0;
-bool Emulator::keepTrack = true;
+size_t Emulator::instructionPointer = 0;
 
-void Emulator::ExecuteInstruction(const std::string& instructionStr)
+void Emulator::PushInstruction(const std::string& instructionStr)
 {
+	if (instructionStr.empty())
+		return;
 	Instruction instruction = Parser::ProcessInstruction(instructionStr);
 
 	if (instructions.count(instruction.opcode) != 0)
 	{
-		if(!isPaused || instruction.opcode == "resume")
-			instructions[instruction.opcode](instruction.operands);
-
-		if(keepTrack)
-			instructionVec.push_back(instructionStr);
+		instructionVec.push_back(instructionStr);
 	}
 	else if (Helper::isLabel(instruction.opcode))
 	{
@@ -39,6 +34,15 @@ void Emulator::ExecuteInstruction(const std::string& instructionStr)
 	else
 	{
 		throw InvalidOpcode(instruction.opcode);
+	}
+}
+
+void Emulator::ExecuteInstructions()
+{
+	for (instructionPointer; instructionPointer < instructionVec.size(); ++instructionPointer)
+	{
+		Instruction instruction = Parser::ProcessInstruction(instructionVec[instructionPointer]);
+		instructions[instruction.opcode](instruction.operands);
 	}
 }
 
@@ -63,7 +67,7 @@ word Emulator::GetRegisterValue(const std::string& reg)
 			return regValue >> BITS_IN_BYTE; // 0x14fd => 0x0014
 	}
 
-	throw InvalidArgument(reg);
+	throw InvalidArgument("the reg '" + reg + "' isnt valid");
 }
 
 void Emulator::SetRegisterValue(const std::string& reg, const word value)
@@ -319,20 +323,20 @@ void Emulator::MathController(const std::vector<std::string>& operands, const Ma
 					break;
 
 				case MathOperation::ADD:
-					SetValueInMemoryAddr(address, GetRegisterValue(operands[DST]) + GetRegisterValue(operands[SRC]));
+					SetValueInMemoryAddr(address, GetValueFromMemoryAccess(operands[DST]) + GetRegisterValue(operands[SRC]));
 					break;
 
 				case MathOperation::SUB:
-					SetValueInMemoryAddr(address, GetRegisterValue(operands[DST]) - GetRegisterValue(operands[SRC]));
+					SetValueInMemoryAddr(address, GetValueFromMemoryAccess(operands[DST]) - GetRegisterValue(operands[SRC]));
 					break;
 
 				case MathOperation::MUL:
-					SetValueInMemoryAddr(address, GetRegisterValue(operands[DST]) * GetRegisterValue(operands[SRC]));
+					SetValueInMemoryAddr(address, GetValueFromMemoryAccess(operands[DST]) * GetRegisterValue(operands[SRC]));
 					break;
 
 				case MathOperation::DIV:
-					SetRegisterValue("dx", GetRegisterValue(operands[DST]) % GetRegisterValue(operands[SRC]));
-					SetValueInMemoryAddr(address, GetRegisterValue(operands[DST]) / GetRegisterValue(operands[SRC]));
+					SetRegisterValue("dx", GetValueFromMemoryAccess(operands[DST]) % GetRegisterValue(operands[SRC]));
+					SetValueInMemoryAddr(address, GetValueFromMemoryAccess(operands[DST]) / GetRegisterValue(operands[SRC]));
 					break;
 			}
 		}
@@ -376,7 +380,7 @@ void Emulator::MathController(const std::vector<std::string>& operands, const Ma
 		if (Helper::isMemoryAllowedRegister(memoryAccess))
 			address = GetRegisterValue(memoryAccess);
 		else
-			address = std::stoi(memoryAccess);
+			address = GetValueFromImmediate(memoryAccess);
 
 		word value = 0;
 		switch (op)
@@ -386,20 +390,20 @@ void Emulator::MathController(const std::vector<std::string>& operands, const Ma
 			break;
 
 		case MathOperation::ADD:
-			value = GetRegisterValue(operands[DST]) + GetValueFromImmediate(operands[SRC]);
+			value = GetValueFromMemoryAccess(operands[DST]) + GetValueFromImmediate(operands[SRC]);
 			break;
 
 		case MathOperation::SUB:
-			value = GetRegisterValue(operands[DST]) - GetValueFromImmediate(operands[SRC]);
+			value = GetValueFromMemoryAccess(operands[DST]) - GetValueFromImmediate(operands[SRC]);
 			break;
 
 		case MathOperation::MUL:
-			value = GetRegisterValue(operands[DST]) * GetValueFromImmediate(operands[SRC]);
+			value = GetValueFromMemoryAccess(operands[DST]) * GetValueFromImmediate(operands[SRC]);
 			break;
 
 		case MathOperation::DIV:
-			SetRegisterValue("dx", GetRegisterValue(operands[DST]) % GetValueFromImmediate(operands[SRC]));
-			value = GetRegisterValue(operands[DST]) / GetValueFromImmediate(operands[SRC]);
+			SetRegisterValue("dx", GetValueFromMemoryAccess(operands[DST]) % GetValueFromImmediate(operands[SRC]));
+			value = GetValueFromMemoryAccess(operands[DST]) / GetValueFromImmediate(operands[SRC]);
 			break;
 		}
 
@@ -546,56 +550,19 @@ void Emulator::jmpHandler(const std::vector<std::string>& operands)
 	if (symbols.count(label) == 0)
 		throw InvalidArgument(operands[0] + " doesnt exist");
 
-	if(keepTrack)
-		instructionVec.push_back("jmp " + operands[0]);
-
-	bool oldKeepTrack = keepTrack;
-
-	keepTrack = false;
-
-	for (auto it = instructionVec.begin() + symbols[label]; it != instructionVec.end(); ++it)
-	{
-		ExecuteInstruction(*it);
-	}
-
-	keepTrack = oldKeepTrack;
-
-}
-
-void Emulator::pauseHandler(const std::vector<std::string>& operands)
-{ 
-	if (isPaused)
-		return;
-
-	isPaused = true;
-	pausedLine = instructionVec.size() + 1;
-}
-
-void Emulator::resumeHandler(const std::vector<std::string>& operands)
-{
-	if (!isPaused)
-		return;
-
-	isPaused = false;
-	keepTrack = false;
-
-	for (auto it = instructionVec.begin() + pausedLine; it != instructionVec.end(); ++it)
-	{
-		ExecuteInstruction(*it);
-	}
-
-	keepTrack = true;
+	instructionPointer = symbols[label] - 1;
 }
 
 void Emulator::loopHandler(const std::vector<std::string>& operands)
 {
 	Helper::validateNumOfOperands(1, operands.size());
 	word cx = GetRegisterValue("cx");
+	std::string label = operands[0] + ":";
 
-	if (Helper::isLabel(operands[0]))
-		throw InvalidOperand("the label '" + operands[0] + "' doesnt exist");
+	if (symbols.count(label) == 0)
+		throw InvalidArgument(operands[0] + " doesnt exist");
 
-	while (--cx != 0)
+	if (--cx != 0)
 	{
 		SetRegisterValue("cx", cx);
 		jmpHandler(operands);

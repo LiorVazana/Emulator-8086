@@ -1,20 +1,45 @@
 #include <iostream>
 #include <string>
+#include <fstream>
 #include "Emulator.h"
 #include "EmulatorException.h"
 
-int main()
+int main(int argc, char* argv[])
 {
 	std::string instruction = "";
+	std::ifstream myFile;
+	bool isFile = false;
+	bool status = true;
 
-	while (true)
+	if (argc == 2)
 	{
-		std::cout << ">> ";
-		std::getline(std::cin, instruction);
+		isFile = true;
+		myFile.open(argv[1]);
+	}
 
+	while (status)
+	{
+		if (!isFile)
+		{
+			std::cout << ">> ";
+			std::getline(std::cin, instruction);
+		}
+		else
+		{
+			std::getline(myFile, instruction);
+			status = myFile.good();
+
+			if (!status)
+				instruction = "run";
+		}
 		try
 		{
-			Emulator::ExecuteInstruction(instruction);
+			Helper::trim(instruction);
+
+			if (instruction == "run")
+				Emulator::ExecuteInstructions();
+			else
+				Emulator::PushInstruction(instruction);
 		}
 		catch (const EmulatorException& e)
 		{

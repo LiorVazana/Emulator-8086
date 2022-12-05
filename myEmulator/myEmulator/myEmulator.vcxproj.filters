@@ -72,4 +72,9 @@
       <Filter>Header Files\Exceptions</Filter>
     </ClInclude>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="test.myasm">
+      <Filter>Resource Files</Filter>
+    </None>
+  </ItemGroup>
 </Project>
