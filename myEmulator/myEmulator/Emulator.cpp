@@ -271,7 +271,7 @@ void Emulator::MathController(const std::vector<std::string>& operands, const Ma
 		else
 		{
 			word value = GetValueFromMemoryAddr(address);
-			value |= (static_cast<word>(GetValueFromMemoryAddr(address + 1)) << BITS_IN_BYTE);//ùðééä
+			value |= (static_cast<word>(GetValueFromMemoryAddr(address + 1)) << BITS_IN_BYTE);//Ã¹Ã°Ã©Ã©Ã¤
 
 			switch (op)
 			{
@@ -592,17 +592,14 @@ void Emulator::loopHandler(const std::vector<std::string>& operands)
 	Helper::validateNumOfOperands(1, operands.size());
 	word cx = GetRegisterValue("cx");
 
-	if (cx != 0)
+	if (Helper::isLabel(operands[0]))
+		throw InvalidOperand("the label '" + operands[0] + "' doesnt exist");
+
+	while (--cx != 0)
 	{
-		if (Helper::isLabel(operands[0]))
-			throw InvalidOperand("the label '" + operands[0] + "' doesnt exist");
-
-		while (--cx != 0)
-		{
-			SetRegisterValue("cx", cx);
-			jmpHandler(operands);
-		}
-
 		SetRegisterValue("cx", cx);
+		jmpHandler(operands);
 	}
+
+	SetRegisterValue("cx", cx);
 }
