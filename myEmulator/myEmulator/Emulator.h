@@ -59,6 +59,7 @@ private:
 	static void jmpHandler(const std::vector<std::string>& operands);
 	static void pauseHandler(const std::vector<std::string>& operands);
 	static void resumeHandler(const std::vector<std::string>& operands);
+	static void loopHandler(const std::vector<std::string>& operands);
 
 private:
 	static const byte BITS_IN_BYTE = 8;

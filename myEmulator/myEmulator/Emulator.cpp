@@ -8,7 +8,8 @@ std::unordered_map<std::string, InstructionHandler> Emulator::instructions = { {
 										{"lea", leaHandler}, {"add", addHandler}, {"sub", subHandler},
 										{"mul", mulHandler}, {"div", divHandler}, {"inc", incHandler},
 										{"dec", decHandler}, {"print", printHandler}, {"print_str", printStrHandler},
-										{"jmp", jmpHandler}, {"pause", pauseHandler}, {"resume", resumeHandler}};
+										{"jmp", jmpHandler}, {"pause", pauseHandler}, {"resume", resumeHandler},
+										{"loop", loopHandler}};
 
 std::vector<std::string> Emulator::instructionVec;
 std::unordered_map<std::string, size_t> Emulator::symbols;
@@ -584,4 +585,24 @@ void Emulator::resumeHandler(const std::vector<std::string>& operands)
 	}
 
 	keepTrack = true;
+}
+
+void Emulator::loopHandler(const std::vector<std::string>& operands)
+{
+	Helper::validateNumOfOperands(1, operands.size());
+	word cx = GetRegisterValue("cx");
+
+	if (cx != 0)
+	{
+		if (Helper::isLabel(operands[0]))
+			throw InvalidOperand("the label '" + operands[0] + "' doesnt exist");
+
+		while (--cx != 0)
+		{
+			SetRegisterValue("cx", cx);
+			jmpHandler(operands);
+		}
+
+		SetRegisterValue("cx", cx);
+	}
 }
