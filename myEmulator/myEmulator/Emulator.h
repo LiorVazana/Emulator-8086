@@ -59,6 +59,65 @@ private:
 	static void printStrHandler(const std::vector<std::string>& operands);
 	static void jmpHandler(const std::vector<std::string>& operands);
 	static void loopHandler(const std::vector<std::string>& operands);
+	static void cmpHandler(const std::vector<std::string>& operands);
+
+	// je - Jump Equal | jz - Jump Zero
+	static void jeJzHandler(const std::vector<std::string>& operands);
+
+	// jne - Jump not Equal | jnz - Jump Not Zero
+	static void jneJnzHandler(const std::vector<std::string>& operands);
+
+	// jg - Jump Greater | jnle - Jump Not Less/Equal
+	static void jgJnleHandler(const std::vector<std::string>& operands);
+
+	// jge - Jump Greater/Equal | jnl - Jump Not Less
+	static void jgeJnlHandler(const std::vector<std::string>& operands);
+
+	// jl - Jump Less | jnge - Jump Not Greater/Equal
+	static void jlJngeHandler(const std::vector<std::string>& operands);
+
+	// jle - Jump Less/Equal | jng - Jump Not Greater
+	static void jleJngHandler(const std::vector<std::string>& operands);
+
+	// ja - Jump Above | Jnbe - Jump Not Below/Equal
+	static void jaJnbeHandler(const std::vector<std::string>& operands);
+
+	// jxcz - Jump if CX is Zero
+	static void jxczHandler(const std::vector<std::string>& operands);
+
+	// jae Jump Above/Equal | jnb - Jump Not Below
+	static void jaeJnbHandler(const std::vector<std::string>& operands);
+
+	// jb - Jump Below | jnae - Jump Not Above/Equal
+	static void jbJnaeHandler(const std::vector<std::string>& operands);
+
+	// jbe - Jump Below/Equal | jna - Jump Not Above
+	static void jbeJnaHandler(const std::vector<std::string>& operands);
+
+	// jc - Jump If Carry
+	static void jcHandler(const std::vector<std::string>& operands);
+
+	// jnc - Jump If No Carry
+	static void jncHandler(const std::vector<std::string>& operands);
+
+	// jo - Jump If Overflow
+	static void joHandler(const std::vector<std::string>& operands);
+
+	// jno - Jump If No Overflow
+	static void jnoHandler(const std::vector<std::string>& operands);
+
+	// jp - Jump Parity | jpe - Jump Parity Even	
+	static void jpJpeHandler(const std::vector<std::string>& operands);
+
+	// jnp - Jump No Parity | jpo - Jump Parity Odd
+	static void jnpJpoHandler(const std::vector<std::string>& operands);
+
+	// js - Jump Sign (negative value)
+	static void jsHandler(const std::vector<std::string>& operands);
+
+	// jns - Jump No Sign (positiv value)
+	static void jnsHandler(const std::vector<std::string>& operands);
+
 
 private:
 	static const byte BITS_IN_BYTE = 8;
