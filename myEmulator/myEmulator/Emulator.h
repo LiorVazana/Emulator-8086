@@ -3,7 +3,7 @@
 #include <unordered_map>
 #include <memory>
 #include "Instruction.h"
-#include "Parser.h"
+#include "Lexer.h"
 #include "InvalidOpcode.h"
 #include "InvalidOperand.h"
 #include "MemoryAccessViolation.h"
@@ -32,19 +32,19 @@ enum class MathOperation
 class Emulator
 {
 public:
-	static void PushInstruction(const std::string& instructionStr);
-	static void ExecuteInstructions();
+	static void pushInstruction(const std::string& instructionStr);
+	static void executeInstructions();
 
 private:
 
-	static word GetRegisterValue(const std::string& reg);
-	static void SetRegisterValue(const std::string& reg, const word value);
-	static byte GetValueFromMemoryAddr(const dword address);
-	static byte GetValueFromMemoryAccess(const std::string& memory);
-	static void SetValueInMemoryAddr(const dword address, const byte value);
-	static void SetValueInMemoryAccess(const std::string& memory, const byte value);
-	static word GetValueFromImmediate(const std::string& str);
-	static void MathController(const std::vector<std::string>& operands, const MathOperation op);
+	static word getRegisterValue(const std::string& reg);
+	static void setRegisterValue(const std::string& reg, const word value);
+	static byte getValueFromMemoryAddr(const dword address);
+	static byte getValueFromMemoryAccess(const std::string& memory);
+	static void setValueInMemoryAddr(const dword address, const byte value);
+	static void setValueInMemoryAccess(const std::string& memory, const byte value);
+	static word getValueFromImmediate(const std::string& str);
+	static void mathController(const std::vector<std::string>& operands, const MathOperation op);
 
 	// opcode functions
 	static void movHandler(const std::vector<std::string>& operands);
@@ -82,8 +82,8 @@ private:
 	// ja - Jump Above | Jnbe - Jump Not Below/Equal
 	static void jaJnbeHandler(const std::vector<std::string>& operands);
 
-	// jxcz - Jump if CX is Zero
-	static void jxczHandler(const std::vector<std::string>& operands);
+	// jcxz - Jump if CX is Zero
+	static void jcxzHandler(const std::vector<std::string>& operands);
 
 	// jae Jump Above/Equal | jnb - Jump Not Below
 	static void jaeJnbHandler(const std::vector<std::string>& operands);

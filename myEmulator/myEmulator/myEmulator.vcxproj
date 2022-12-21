@@ -142,7 +142,7 @@
     <ClCompile Include="Emulator.cpp" />
     <ClCompile Include="Helper.cpp" />
     <ClCompile Include="Main.cpp" />
-    <ClCompile Include="Parser.cpp" />
+    <ClCompile Include="Lexer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Emulator.h" />
@@ -155,7 +155,7 @@
     <ClInclude Include="InvalidOperand.h" />
     <ClInclude Include="InvalidRegisterAccess.h" />
     <ClInclude Include="MemoryAccessViolation.h" />
-    <ClInclude Include="Parser.h" />
+    <ClInclude Include="Lexer.h" />
     <ClInclude Include="WrongNumberOfOperands.h" />
     <ClInclude Include="ZeroDivision.h" />
   </ItemGroup>

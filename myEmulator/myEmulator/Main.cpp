@@ -37,9 +37,9 @@ int main(int argc, char* argv[])
 			Helper::trim(instruction);
 
 			if (instruction == "run")
-				Emulator::ExecuteInstructions();
+				Emulator::executeInstructions();
 			else
-				Emulator::PushInstruction(instruction);
+				Emulator::pushInstruction(instruction);
 		}
 		catch (const EmulatorException& e)
 		{

@@ -1,7 +1,7 @@
-#include "Parser.h"
+#include "Lexer.h"
 
 
-Instruction Parser::ProcessInstruction(std::string instruction)
+Instruction Lexer::processInstruction(std::string instruction)
 {
 	Helper::trim(instruction);
 

@@ -6,8 +6,8 @@
 #include <vector>
 
 
-class Parser
+class Lexer
 {
 public:
-	static Instruction ProcessInstruction(std::string instruction);
+	static Instruction processInstruction(std::string instruction);
 };
